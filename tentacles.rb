@@ -5,7 +5,6 @@ require 'highline/import'
 require 'yaml'
 
 config = YAML.load_file('config.yml')
-puts config
 
 @username = ask("Username: ")
 @password = ask("sudo Password: ") { |q| q.echo = "x" }
