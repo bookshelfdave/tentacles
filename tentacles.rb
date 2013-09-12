@@ -10,6 +10,7 @@ config = YAML.load_file('config.yml')
 @username = ask("Username: ")
 @password = ask("sudo Password: ") { |q| q.echo = "x" }
 @currentcluster = config["default"]
+@cwd = nil
 
 def run(cmd, servers) 
   servers.each do |s|
@@ -52,8 +53,17 @@ end
 
 while line = readline_with_hist_management
   if line =~ /^!/ then
-    @currentcluster = line[1,line.length].strip()
-    puts @currentcluster
+    newcluster = line[1,line.length].strip()
+    if config.has_key?(newcluster) then
+      @currentcluster = newcluster
+       puts @currentcluster
+    else
+      puts "Invalid cluster id"
+    end
+  elsif line =~ /^\// then
+    cd = line[1,line.length].strip()
+      puts "cd to [#{cd}]"
+      @cwd = cd
   elsif line.strip() == "cluster" then
     puts @currentcluster.to_s.blue
     puts config[@currentcluster].to_s.blue
@@ -61,8 +71,22 @@ while line = readline_with_hist_management
     config.keys.each do |k|
       puts "#{k}: #{config[k]}".green
     end
+  elsif line =~ /^@/ then
+      c = line[line.index(":")+1,line.length]
+      puts "Command = #{c}"
+      s = line[1,line.index(":")-1]
+      ## move this somewhere else
+      if @cwd != nil then
+        run("cd #{@cwd} && #{c}", [s])
+      else
+        run(c, [s])
+      end
   else
-    run(line, config[@currentcluster])
+    if @cwd != nil then
+      run("cd #{@cwd} && #{line}", config[@currentcluster])
+    else
+      run(line, config[@currentcluster])
+    end
   end
 end
 
